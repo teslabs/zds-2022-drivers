@@ -1,0 +1,81 @@
+% color definitions
+\definecolor{base-color}{RGB}{41, 128, 185}
+\definecolor{text-color}{RGB}{64, 64, 64}
+\definecolor{hf-bg-color}{RGB}{51, 63, 103}
+\definecolor{hf-text-color}{RGB}{195, 227, 255}
+
+% fonts
+\usefonttheme[onlymath]{serif}
+\setbeamerfont{title}{series=\bfseries,size=\huge}
+\setbeamerfont{frametitle}{series=\bfseries}
+\setbeamerfont{footline}{size=\fontsize{9}{12}}
+\setbeamerfont{subsection in toc}{size=\small}
+
+% colors
+\setbeamercolor{title}{fg=hf-text-color}
+\setbeamercolor{normal text}{fg=text-color}
+\setbeamercolor{structure}{fg=base-color}
+\setbeamercolor{footline}{fg=hf-text-color,bg=hf-bg-color}
+\setbeamercolor{frametitle}{fg=hf-text-color,bg=hf-bg-color}
+
+% no navigation bar, toc with balls
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{section in toc}[ball unnumbered]
+\setbeamertemplate{subsection in toc}[ball unnumbered]
+
+% custom title page
+\setbeamertemplate{title page}
+{
+  \begin{tikzpicture}[overlay,remember picture]
+    \draw [fill=hf-bg-color]
+      (current page.north west) rectangle (\paperwidth,-0.2\paperheight);
+    \draw [line width=4mm,xshift=-3mm,yshift=2mm,draw=hf-bg-color!80]
+      (0,-0.2\paperheight) -- (\paperwidth,-0.2\paperheight);
+    \node[anchor=north east] at (current page.north east) {
+      \includegraphics[scale=0.5]{theme/zds-logo-white}
+    };
+    \node[anchor=south west] at (0,-1) {
+      \parbox{\paperwidth}{
+        \usebeamerfont{title}\usebeamercolor[fg]{title}\inserttitle\par
+        \ifx\insertsubtitle\@empty
+        \else\vskip.5ex
+          {\usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}
+          \insertsubtitle\par}
+        \fi
+      }
+    };
+    \node[anchor=north west] at (0,-2.5) {
+      \parbox{\paperwidth}{
+        \usebeamerfont{author}\usebeamercolor[fg]{author}\insertauthor
+        \vskip1.5ex
+        \usebeamerfont{institute}\usebeamercolor[fg]{author}\insertinstitute
+        \vskip1.5ex
+        \usebeamercolor[fg]{date}\usebeamerfont{date}\insertdate
+      }
+    };
+  \end{tikzpicture}
+}
+
+% custom frame title
+\setbeamertemplate{frametitle}
+{
+  \nointerlineskip
+  \begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,center]{frametitle}
+    \insertframetitle
+  \end{beamercolorbox}
+}
+
+% custom frame footer
+\setbeamertemplate{footline}
+{
+  \begin{beamercolorbox}[ht=3ex,dp=2ex]{footline}
+    \begin{columns}
+      \column{0.33333\paperwidth}
+      \hspace{2em}\includegraphics[height=3.5ex]{theme/zds-logo-white}
+      \column{0.33333\paperwidth}
+      \centering\insertsection
+      \column{0.33333\paperwidth}
+      \hfill\insertframenumber\hspace*{2em}
+    \end{columns}
+  \end{beamercolorbox}
+}

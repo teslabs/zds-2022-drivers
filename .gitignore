@@ -1,0 +1,4 @@
+build
+_minted*
+*.log
+*.bak*
