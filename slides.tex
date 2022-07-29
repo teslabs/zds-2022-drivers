@@ -1517,19 +1517,8 @@
       include: base.yaml
 
       properties:
-        uart:
-          type: phandle
+        reg:
           required: true
-          description: |
-            UART port to which the sensor is connected to.
-
-        address:
-          type: int
-          required: false
-          default: 0xffffffff
-          description: |
-            The address of the sensor. Defaults to 0xFFFFFFFF, which is the factory
-            default.
 
         touch-gpios:
           type: phandle-array
@@ -1576,12 +1565,11 @@
 
   \begin{listing}[H]
     \begin{minted}[fontsize=\tiny,escapeinside=??]{kconfig}
-      DT_COMPAT_ZEANTEC_JM101 := zeantec,jm101
-
       config JM101
         bool "JM-101 fingerprint sensor"
-        ?\tikzmark{depends}?depends on GPIO && SERIAL && UART_INTERRUPT_DRIVEN
-        default $(dt_compat_enabled,$(DT_COMPAT_ZEANTEC_JM101))?\tikzmark{default}?
+        default y
+        ?\tikzmark{depends}?depends on GPIO && SERIAL && UART_INTERRUPT_DRIVEN && \
+                   DT_HAS_ZEANTEC_JM101_ENABLED?\tikzmark{default}?
         help
           JM-101 fingerprint sensor.
 
@@ -1598,8 +1586,8 @@
   \begin{tikzpicture}[overlay,remember picture]
     \draw[->] ($(pic cs:depends) +(-2ex,4.7em)$) to[out=180,in=180] (pic cs:depends);
     \node[anchor=west] at ($(pic cs:depends) +(-2ex,4.7em)$) {Software Dependencies};
-    \draw[->] ($(pic cs:default) +(4ex,4.5em)$) to[out=270,in=0] (pic cs:default);
-    \node[anchor=south] at ($(pic cs:default) +(4ex,4.5em)$) {Enabled by default if \texttt{okay} in DT};
+    \draw[->] ($(pic cs:default) +(5ex,3.5em)$) to[out=270,in=0] (pic cs:default);
+    \node[anchor=south] at ($(pic cs:default) +(5ex,3.5em)$) {Depends on being enabled in DT};
   \end{tikzpicture}
 \end{frame}
 
@@ -1724,8 +1712,8 @@
                                                                                \
         /* pull instance configuration from Devicetree */                      \
         static const struct jm101_config jm101_config_##i = {                  \
-          .uart = DEVICE_DT_GET(DT_INST_PHANDLE(i, uart)),                     \
-          .addr = DT_INST_PROP(i, address),                                    \
+          .uart = DEVICE_DT_GET(DT_INST_BUS(i)),                               \
+          .addr = DT_INST_REG_ADDR(i),                                         \
           IF_ENABLED(CONFIG_JM101_TRIGGER,                                     \
                      (.touch = GPIO_DT_SPEC_INST_GET_OR(i, touch_gpios, {}), ))\
         };                                                                     \
@@ -1825,11 +1813,13 @@
 
   \begin{listing}[H]
     \begin{minted}[fontsize=\tiny]{dts}
-      / {
-          fpreader: jm101 {
+      &uart0 {
+          #address-cells = <1>;
+          #size-cells = <0>;
+
+          fpreader: jm101@ffffffff {
               compatible = "zeantec,jm101";
-              label = "JM101";
-              uart = <&uart1>;
+              reg = <0xffffffff>;
               touch-gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
           };
       };
@@ -2446,12 +2436,10 @@
   \frametitle{Kconfig (III)}
   \begin{listing}[H]
     \begin{minted}[fontsize=\tiny]{kconfig}
-      DT_COMPAT_LOCK_SERVO := lock-servo
-
       config LOCK_SERVO
         bool "Servo-controlled lock"
-        depends on PWM && ADC
-        default $(dt_compat_enabled,$(DT_COMPAT_LOCK_SERVO))
+        default y
+        depends on PWM && ADC && DT_HAS_LOCK_SERVO_ENABLED
         help
           Enables a servo-controlled lock driver.
 
