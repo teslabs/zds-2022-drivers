@@ -8,6 +8,8 @@ Development" talk given at the Zephyr Development Summit 2022. The presentation
 goes through multiple topics related to Zephyr driver development by
 implementing a "smart lock" firmware.
 
+[![Video](http://img.youtube.com/vi/o-f2qCd2AXo/0.jpg)](http://www.youtube.com/watch?v=o-f2qCd2AXo "Mastering Zephyr Driver Development")
+
 https://user-images.githubusercontent.com/25011557/170713587-105c6202-f641-44e6-a140-0daa9040704d.mp4
 
 Topics covered in the presentation include:
