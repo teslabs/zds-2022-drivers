@@ -45,7 +45,7 @@
   }{Gerard Marull-Paretas}
 }
 \institute{Nordic Semiconductor ASA}
-\date{7\textsuperscript{th} June 2022}
+\date{20\textsuperscript{th} May 2024}
 
 % document ---------------------------------------------------------------------
 
@@ -173,19 +173,16 @@
             soc {
               i2c0: i2c@40003000 {
                 compatible = "nordic,nrf-twim";
-                label = "I2C0";
                 reg = <0x40003000 0x1000>;
 
                 apds9960@39 {
                   compatible = "avago,apds9960";
-                  label = "APDS9960";
                   reg = <0x39>;
                 };
 
                 ti_hdc@43 {
                   compatible = "ti,hdc",
                                "ti,hdc1010";
-                  label = "HDC1010";
                   reg = <0x43>;
                 };
               };
@@ -245,14 +242,12 @@
       \texttt{compatible} &                                                    %
       Name of the \textbf{hardware} a node \textbf{represents}, typically
       \texttt{vendor,device}. Used to find the \textbf{bindings} for the node. \\
-      \texttt{label}      &                                                    %
-      \textbf{Name} of the device (unique).                                    \\
       \texttt{reg}        &                                                    %
       Information used to \textbf{address} the device (optional). Value
       meaning depends on the device. In general, it is a
       \textbf{sequence of address-length pairs.}                               \\
       \texttt{status}     &                                                    %
-      \textbf{Status} of the device. \texttt{okay} (default if not specified)
+      \textbf{Status} of the device.\ \texttt{okay} (default if not specified)
       or \texttt{disabled}.                                                    \\
       \bottomrule
     \end{tabular}
@@ -298,7 +293,6 @@
         /* one instance of 'nordic,nrf-twim' */
         i2c0: i2c@40003000 {
           compatible = "nordic,nrf-twim";
-          label = "I2C_0";
           reg = <0x40003000 0x1000>;
           clock-frequency = <I2C_BITRATE_STANDARD>;
         };
@@ -306,7 +300,6 @@
         /* another instance of 'nordic,nrf-twim' */
         i2c1: i2c@40004000 {
           compatible = "nordic,nrf-twim"
-          label = "I2C_1";
           reg = <0x40004000 0x1000>;
           clock-frequency = <I2C_BITRATE_FAST>;
         };
@@ -426,7 +419,7 @@
     \item \textbf{Content} of Devicetree, including data types, is
           \textbf{described} in \textbf{binding} files
     \item Binding files are used by the Devicetree parser to
-          \textbf{validate content}
+          \textbf{validate content} (i.e.\ schema)
     \item Binding files are written in \textbf{YAML}, structure custom to
           Zephyr
   \end{itemize}
@@ -452,8 +445,7 @@
         / {
           dev0: dev@deadbeef {
             ?\tikzmark{dtcompat}?compatible = "vnd,dev"
-            ?\tikzmark{dtbaseprop1}?label = "DEV0";
-            ?\tikzmark{dtbaseprop2}?reg = <0xdeadbeef>;
+            ?\tikzmark{dtbaseprop}?reg = <0xdeadbeef>;
             ?\tikzmark{dtprop}?foo = <7>;
           };
         };
@@ -465,8 +457,7 @@
 
   \begin{tikzpicture}[overlay,remember picture]
     \draw[->] (pic cs:dtcompat) to[out=180,in=0] (pic cs:bindingcompat);
-    \draw[->] (pic cs:dtbaseprop1) to[out=180,in=0] (pic cs:bindingbaseprop);
-    \draw[->] (pic cs:dtbaseprop2) to[out=180,in=0] (pic cs:bindingbaseprop);
+    \draw[->] (pic cs:dtbaseprop) to[out=180,in=0] (pic cs:bindingbaseprop);
     \draw[->] (pic cs:dtprop) to[out=180,in=0] (pic cs:bindingprop);
   \end{tikzpicture}
 \end{frame}
@@ -794,7 +785,7 @@
       struct device {
         const char *name;
         const void *config;
-        void * const data;
+        void * data;
         const void *api;
         ...
       };
@@ -810,14 +801,12 @@
       Field           & Purpose                                            \\
       \midrule
       \texttt{name}   &                                                    %
-      Device name (unique), corresponds to the \textbf{\texttt{label}}
-      property for Devicetree devices                                      \\
+      Device name (unique), corresponds to the Devicetree node name        \\
       \texttt{config} &                                                    %
-      Reference to \textbf{read-only configuration} set at
-      \textbf{compile time}, tipically used to store Devicetree properties \\
+      Reference to \textbf{immutable device configuration}, tipically used to
+      store Devicetree properties                                          \\
       \texttt{data}   &                                                    %
-      Reference to device \textbf{data} that needs to be modified at
-      \textbf{runtime}, e.g.\ counter, state, etc.                         \\
+      Reference to \textbf{mutable device data}, e.g.\ counter, state, etc.\\
       \texttt{api}    &                                                    %
       Reference to the device \textbf{API operations}                      \\
       \bottomrule
@@ -996,7 +985,6 @@
             ...
             accel: sensor@ff {
               compatible = "vnd,mysensor";
-              label = "ACCEL"
               reg = <0xff>;
               int-gpios = <&gpio0 1 GPIO_ACTIVE_HIGH>;
               sample-freq = <1000>;
@@ -1035,7 +1023,7 @@
       const struct device *dev = DEVICE_DT_GET_ONE(vnd_my_sensor);
   
       /* get reference to a device at runtime, using name lookup */
-      const struct device *dev = device_get_binding("ACCEL");
+      const struct device *dev = device_get_binding("sensor@ff");
     \end{minted}
     \caption{Examples on how to obtain device references}
   \end{listing}
@@ -1568,8 +1556,10 @@
       config JM101
         bool "JM-101 fingerprint sensor"
         default y
-        ?\tikzmark{depends}?depends on GPIO && SERIAL && UART_INTERRUPT_DRIVEN && \
-                   DT_HAS_ZEANTEC_JM101_ENABLED?\tikzmark{default}?
+        depends on DT_HAS_ZEANTEC_JM101_ENABLED?\tikzmark{default}?
+        ?\tikzmark{select}?select GPIO
+        select SERIAL
+        select UART_INTERRUPT_DRIVEN
         help
           JM-101 fingerprint sensor.
 
@@ -1584,8 +1574,8 @@
   \end{listing}
 
   \begin{tikzpicture}[overlay,remember picture]
-    \draw[->] ($(pic cs:depends) +(-2ex,4.7em)$) to[out=180,in=180] (pic cs:depends);
-    \node[anchor=west] at ($(pic cs:depends) +(-2ex,4.7em)$) {Software Dependencies};
+    \draw[->] ($(pic cs:select) +(-2ex,6em)$) to[out=180,in=180] (pic cs:select);
+    \node[anchor=west] at ($(pic cs:select) +(-2ex,6em)$) {Software Dependencies (selected)};
     \draw[->] ($(pic cs:default) +(5ex,3.5em)$) to[out=270,in=0] (pic cs:default);
     \node[anchor=south] at ($(pic cs:default) +(5ex,3.5em)$) {Depends on being enabled in DT};
   \end{tikzpicture}
@@ -1755,7 +1745,7 @@
         ...
       #ifdef CONFIG_JM101_TRIGGER
         if (config->touch.port != NULL) {
-          if (!device_is_ready(config->touch.port)) {
+          if (!gpio_is_ready_dt(&config->touch)) {
             LOG_ERR("Touch GPIO controller not ready");
             return -ENODEV;
           }
@@ -1835,18 +1825,12 @@
     \item JM-101 sensor driver is enabled when \texttt{CONFIG\_JM101=y}
     \item \texttt{CONFIG\_JM101} is automatically enabled if:
           \begin{itemize}
-            \item All its \textbf{dependencies} are \textbf{enabled}, including
-                  \texttt{CONFIG\_SENSOR}
+            \item Its driver class is enabledm i.e.\ \texttt{CONFIG\_SENSOR}
             \item One or more instances are \texttt{okay} in Devicetree
           \end{itemize}
   \end{itemize}
   \begin{listing}[H]
     \begin{minted}[fontsize=\tiny]{kconfig}
-      # dependencies required so that JM-101 driver can be enabled
-      CONFIG_GPIO=y
-      CONFIG_SERIAL=y
-      CONFIG_UART_INTERRUPT_DRIVEN=y
-
       # enable the sensor driver class
       CONFIG_SENSOR=y
 
@@ -2439,7 +2423,9 @@
       config LOCK_SERVO
         bool "Servo-controlled lock"
         default y
-        depends on PWM && ADC && DT_HAS_LOCK_SERVO_ENABLED
+        depends on DT_HAS_LOCK_SERVO_ENABLED
+        select PWM
+        select ADC
         help
           Enables a servo-controlled lock driver.
 
@@ -2456,10 +2442,8 @@
       add_subdirectory(drivers)
 
       zephyr_include_directories(include)
-
       # optional, only needed for userspace support
-      list(APPEND SYSCALL_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
-      set(SYSCALL_INCLUDE_DIRS ${SYSCALL_INCLUDE_DIRS} PARENT_SCOPE)
+      zephyr_syscall_include_directories(include)
     \end{minted}
     \caption{\texttt{\$ROOT/CMakeLists.txt}}
   \end{listing}
@@ -2560,7 +2544,7 @@
           closed-pulse-us = <1250>;
           io-channels = <&adc 0>;
           fb-gain = <(-1765)>;
-          fb-offset = <4206250>;
+          fb-offset-microvolt = <4206250>;
           max-target-err-us = <50>;
           max-action-time-ms = <2000>;
         };
@@ -2627,17 +2611,12 @@
           \texttt{CONFIG\_LOCK\_SERVO=y}
     \item \texttt{CONFIG\_LOCK\_SERVO} is automatically enabled if:
           \begin{itemize}
-            \item All its \textbf{dependencies} are \textbf{enabled}, including
-                  \texttt{CONFIG\_LOCK}
+            \item Its driver class is enabled, i.e.\ \texttt{CONFIG\_LOCK}
             \item One or more instances are \texttt{okay} in Devicetree
           \end{itemize}
   \end{itemize}
   \begin{listing}[H]
     \begin{minted}[fontsize=\tiny]{kconfig}
-      # dependencies required so that servo-driven lock driver can be enabled
-      CONFIG_ADC=y
-      CONFIG_PWM=y
-
       # enable the lock driver class
       CONFIG_LOCK=y
     \end{minted}
